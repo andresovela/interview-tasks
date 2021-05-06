@@ -1,4 +1,4 @@
-include_directories(
+set(INCLUDE_PATHS
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/allocator
 )

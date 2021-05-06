@@ -34,6 +34,7 @@ typedef enum {
  * @param[in] max_block_size    maximum size of a block in the allocator's buffer
  * 
  * @return allocator_t*         pointer to allocator instance
+ *                              NULL in case of allocation error
  */
 allocator_t* allocator_init(size_t buffer_size,
                             uint8_t min_block_size,

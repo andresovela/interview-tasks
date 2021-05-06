@@ -1,7 +1,5 @@
 #include "stdio.h"
 
-int main(int argc, char *argv[])
-{
-    printf("Program running");
-    return 0;
+int main(int argc, char* argv[]) {
+    printf("Running program");
 }
