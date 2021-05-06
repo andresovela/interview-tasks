@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.17)
+
+# Sets project name and enables C language
+project(memory_allocator LANGUAGES C ASM)
+
+# Where the sources of the project are located
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Force CMake to output every compiler command executed
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+set(CMAKE_EXECUTABLE_SUFFIX .elf)
+set(CMAKE_C_STANDARD 99)
+
+# Sets include paths
+include(cmake/include_directories.cmake)
+
+# Declares all the source files in the ${SOURCE_FILES} variable
+include(cmake/source_files.cmake)
+
+# Adds project target
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
