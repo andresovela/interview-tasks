@@ -59,6 +59,8 @@ allocator_t* allocator_init(size_t buffer_size,
                             uint8_t min_block_size,
                             uint8_t max_block_size) {
     allocator_t* p_allocator = (allocator_t*)malloc(sizeof(allocator_t));
+
+    // Check if we failed to allocate memory for the allocator and fail early
     if (p_allocator == NULL) {
         return NULL;
     }
