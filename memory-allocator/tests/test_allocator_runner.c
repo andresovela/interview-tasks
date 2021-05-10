@@ -12,6 +12,7 @@ extern void test_allocator_alloc_success(void);
 extern void test_allocator_alloc_error_below_min_block_size(void);
 extern void test_allocator_alloc_error_above_max_block_size(void);
 extern void test_allocator_free_error_on_empty_buffer(void);
+extern void test_allocator_alloc_full_buffer_one_by_one(void);
 extern void test_allocator_many_allocs(void);
 extern void test_allocator_many_allocs_and_frees(void);
 extern void test_allocator_allocs_and_frees_different_sizes(void);
@@ -84,12 +85,13 @@ int main(void)
   run_test(test_allocator_alloc_error_below_min_block_size, "test_allocator_alloc_error_below_min_block_size", 29);
   run_test(test_allocator_alloc_error_above_max_block_size, "test_allocator_alloc_error_above_max_block_size", 38);
   run_test(test_allocator_free_error_on_empty_buffer, "test_allocator_free_error_on_empty_buffer", 47);
-  run_test(test_allocator_many_allocs, "test_allocator_many_allocs", 53);
-  run_test(test_allocator_many_allocs_and_frees, "test_allocator_many_allocs_and_frees", 72);
-  run_test(test_allocator_allocs_and_frees_different_sizes, "test_allocator_allocs_and_frees_different_sizes", 107);
-  run_test(test_allocator_peek_error_on_empty_buffer, "test_allocator_peek_error_on_empty_buffer", 130);
-  run_test(test_allocator_peek_last_alloc, "test_allocator_peek_last_alloc", 142);
-  run_test(test_allocator_check_peeked_data, "test_allocator_check_peeked_data", 159);
+  run_test(test_allocator_alloc_full_buffer_one_by_one, "test_allocator_alloc_full_buffer_one_by_one", 53);
+  run_test(test_allocator_many_allocs, "test_allocator_many_allocs", 86);
+  run_test(test_allocator_many_allocs_and_frees, "test_allocator_many_allocs_and_frees", 105);
+  run_test(test_allocator_allocs_and_frees_different_sizes, "test_allocator_allocs_and_frees_different_sizes", 140);
+  run_test(test_allocator_peek_error_on_empty_buffer, "test_allocator_peek_error_on_empty_buffer", 163);
+  run_test(test_allocator_peek_last_alloc, "test_allocator_peek_last_alloc", 175);
+  run_test(test_allocator_check_peeked_data, "test_allocator_check_peeked_data", 192);
 
   return UnityEnd();
 }

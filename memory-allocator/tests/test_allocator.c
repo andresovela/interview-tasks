@@ -50,6 +50,39 @@ void test_allocator_free_error_on_empty_buffer(void) {
     TEST_ASSERT_EQUAL(ALLOCATOR_ERROR_NOT_FOUND, result);
 }
 
+void test_allocator_alloc_full_buffer_one_by_one(void) {
+    allocator_t* p_allocator = allocator_init(10, 1, 1);
+    uint8_t* p_block;
+    allocator_error_t result;
+
+    // Fill and empty the entire buffer 100 times
+    for (int cycles = 0; cycles < 100; cycles++) {
+        // Allocate 10 blocks to fill the entire buffer
+        for (int i = 0; i < 10; i++) {
+            p_block = NULL;
+            result = allocator_alloc(p_allocator, 1, &p_block);
+            TEST_ASSERT_EQUAL(ALLOCATOR_SUCCESS, result);
+            TEST_ASSERT(p_block != NULL);
+        }
+
+        // Further allocations should fail
+        p_block = NULL;
+        result = allocator_alloc(p_allocator, 1, &p_block);
+        TEST_ASSERT_EQUAL(ALLOCATOR_ERROR_OUT_OF_MEMORY, result);
+        TEST_ASSERT(p_block == NULL);
+
+        // Free those 10 blocks
+        for (int i = 0; i < 10; i++) {
+            result = allocator_free(p_allocator);
+            TEST_ASSERT_EQUAL(ALLOCATOR_SUCCESS, result);
+        }
+
+        // Further calls to free should fail, nothing to free
+        result = allocator_free(p_allocator);
+        TEST_ASSERT_EQUAL(ALLOCATOR_ERROR_NOT_FOUND, result);
+    }
+}
+
 void test_allocator_many_allocs(void) {
     allocator_t* p_allocator = allocator_init(100, 5, 10);
     uint8_t* p_block = NULL;

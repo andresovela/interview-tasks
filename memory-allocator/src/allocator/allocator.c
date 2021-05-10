@@ -38,7 +38,7 @@ static size_t get_buffer_utilization(allocator_buffer_cb_t* p_cb) {
 }
 
 static size_t get_space_available(allocator_buffer_cb_t* p_cb) {
-    return p_cb->max_capacity - get_buffer_utilization(p_cb);
+    return p_cb->max_capacity - get_buffer_utilization(p_cb) - 1;
 }
 
 static bool is_buffer_empty(allocator_buffer_cb_t* p_cb) {
