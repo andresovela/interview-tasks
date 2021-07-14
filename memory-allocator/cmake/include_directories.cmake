@@ -1,4 +1,5 @@
 set(INCLUDE_PATHS
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/allocator
+    ${PROJECT_SOURCE_DIR}/logging
 )

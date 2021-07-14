@@ -3,18 +3,10 @@
 #include "stdbool.h"
 #include "stdlib.h"
 
-#define LOG_ENABLED 0
-
-#if LOG_ENABLED
-#include "stdio.h"
-#define log(...)             \
-    do {                     \
-        printf(__VA_ARGS__); \
-        printf("\n");        \
-    } while (0)
-#else
-#define log(...)
-#endif
+#define __FILENAME__     "allocator.c"
+#define LOG_MODULE_GROUP LOG_GROUP_DEFAULT
+#define LOG_LEVEL        LOG_LEVEL_DEBUG
+#include "logging.h"
 
 static size_t get_index_after_block(allocator_buffer_cb_t* p_cb, size_t index, uint8_t block_size) {
     // The new index would go beyond the buffer size after inserting the block
@@ -126,7 +118,7 @@ allocator_error_t allocator_alloc(allocator_t* p_allocator, size_t block_size, u
         return ALLOCATOR_ERROR_UNSUPPORTED_SIZE;
     }
 
-    log("Trying alloc - %lu data available, %lu size available", get_space_available(&p_allocator->data_cb), get_space_available(&p_allocator->size_cb));
+    log_debug("Trying alloc - %lu data available, %lu size available", get_space_available(&p_allocator->data_cb), get_space_available(&p_allocator->size_cb));
     if (block_size > get_space_available(&p_allocator->data_cb)) {
         return ALLOCATOR_ERROR_OUT_OF_MEMORY;
     }
@@ -142,9 +134,9 @@ allocator_error_t allocator_alloc(allocator_t* p_allocator, size_t block_size, u
     p_allocator->p_block_sizes[p_allocator->size_cb.head] = block_size;
     p_allocator->size_cb.head = get_index_after_block(&p_allocator->size_cb, p_allocator->size_cb.head, 1);
 
-    log("Alloc successful --------");
-    log("Data buffer: Head %d, Utilization %lu, Space %lu", p_allocator->data_cb.head, get_buffer_utilization(&p_allocator->data_cb), get_space_available(&p_allocator->data_cb));
-    log("Size buffer: Head %d, Utilization %lu, Space %lu", p_allocator->size_cb.head, get_buffer_utilization(&p_allocator->size_cb), get_space_available(&p_allocator->size_cb));
+    log_debug("Alloc successful --------");
+    log_debug("Data buffer: Head %lu, Utilization %lu, Space %lu", p_allocator->data_cb.head, get_buffer_utilization(&p_allocator->data_cb), get_space_available(&p_allocator->data_cb));
+    log_debug("Size buffer: Head %lu, Utilization %lu, Space %lu", p_allocator->size_cb.head, get_buffer_utilization(&p_allocator->size_cb), get_space_available(&p_allocator->size_cb));
     return ALLOCATOR_SUCCESS;
 }
 
@@ -188,8 +180,8 @@ allocator_error_t allocator_free(allocator_t* p_allocator) {
     p_allocator->size_cb.tail = get_index_after_block(&p_allocator->size_cb, p_allocator->size_cb.tail, 1);
     p_allocator->data_cb.tail = get_index_after_block(&p_allocator->data_cb, p_allocator->data_cb.tail, freed_block_size);
 
-    log("Free successful --------");
-    log("Data buffer: Tail %d, Utilization %lu, Space %lu", p_allocator->data_cb.tail, get_buffer_utilization(&p_allocator->data_cb), get_space_available(&p_allocator->data_cb));
-    log("Size buffer: Tail %d, Utilization %lu, Space %lu", p_allocator->size_cb.tail, get_buffer_utilization(&p_allocator->size_cb), get_space_available(&p_allocator->size_cb));
+    log_debug("Free successful --------");
+    log_debug("Data buffer: Tail %lu, Utilization %lu, Space %lu", p_allocator->data_cb.tail, get_buffer_utilization(&p_allocator->data_cb), get_space_available(&p_allocator->data_cb));
+    log_debug("Size buffer: Tail %lu, Utilization %lu, Space %lu", p_allocator->size_cb.tail, get_buffer_utilization(&p_allocator->size_cb), get_space_available(&p_allocator->size_cb));
     return ALLOCATOR_SUCCESS;
 }
