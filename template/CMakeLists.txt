@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 # Sets project name and enables C language
-project(template LANGUAGES C ASM)
+project(template LANGUAGES C)
 
 # Where the sources of the project are located
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -12,11 +12,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 set(CMAKE_C_STANDARD 99)
 
-# Sets include paths
-include(cmake/include_directories.cmake)
-
-# Declares all the source files in the ${SOURCE_FILES} variable
-include(cmake/source_files.cmake)
-
-# Adds project target
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_subdirectory(src)
+add_subdirectory(tests)
+add_subdirectory(external/unity)

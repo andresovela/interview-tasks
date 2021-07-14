@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/cc  -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/template.dir/main.c.o CMakeFiles/template.dir/example1/example1.c.o CMakeFiles/template.dir/example2/example2.c.o -o template.elf 
