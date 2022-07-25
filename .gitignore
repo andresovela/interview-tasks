@@ -1,4 +1,5 @@
+.vscode
 */build/
-can-typestate/.vscode
-can-typestate/target
-can-typestate/Cargo.lock
+*/.vscode
+*/target
+*/Cargo.lock

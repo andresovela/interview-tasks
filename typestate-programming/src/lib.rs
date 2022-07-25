@@ -35,7 +35,7 @@ pub trait Close<T> {
 }
 
 impl Can<Closed> {
-    /// Create a CAN interface
+    /// Create a CAN interface.
     pub fn new() -> Self {
         Can {
             _marker: PhantomData,
@@ -73,7 +73,7 @@ impl Can<Receiving> {
 }
 
 impl Close<Can<Closed>> for Can<Open> {
-    /// Close an open interface
+    /// Close an open interface.
     fn close(self) -> Can<Closed> {
         Can {
             _marker: PhantomData,
@@ -82,7 +82,7 @@ impl Close<Can<Closed>> for Can<Open> {
 }
 
 impl Close<Can<Closed>> for Can<Receiving> {
-    /// Close an open interface
+    /// Close an open interface.
     fn close(self) -> Can<Closed> {
         Can {
             _marker: PhantomData,
