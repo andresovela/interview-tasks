@@ -1,17 +1,17 @@
 use std::marker::PhantomData;
 
 /// A hypothetical CAN interface.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use can_interface::{Can, Close};
-/// 
+///
 /// let can = Can::new();
 /// let mut can = can.open();
-/// 
+///
 /// let _ = can.send(42);
-/// 
+///
 /// let mut can = can.set_receive();
 /// let _ = can.blocking_receive().unwrap();
 /// let _ = can.close();
@@ -50,13 +50,19 @@ impl Can<Closed> {
     }
 }
 
+impl Default for Can<Closed> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Can<Open> {
     /// Send a payload to an open interface.
     pub fn send(&mut self, payload: u32) -> Result<(), &str> {
         let _ = payload;
         Ok(())
     }
-    
+
     /// Set the interface in receiving mode.
     pub fn set_receive(self) -> Can<Receiving> {
         Can {
