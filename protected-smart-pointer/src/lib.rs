@@ -213,6 +213,16 @@ mod tests {
     }
 
     #[test]
+    fn owner_can_create_user_with_previously_dropped_id() {
+        let owner = Protected::new(42);
+        let user1 = owner.create_user(0);
+        assert!(user1.is_some());
+        drop(user1);
+        let user2 = owner.create_user(0);
+        assert!(user2.is_some());
+    }
+
+    #[test]
     fn user_with_access_can_read() {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
