@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::marker::PhantomData;
+use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
@@ -12,21 +13,21 @@ pub struct User;
 #[derive(Debug)]
 pub struct AccessDeniedError;
 
-pub type ProtectedReadGuard<'a, T> = RwLockReadGuard<'a, T>;
-pub type ProtectedWriteGuard<'a, T> = RwLockWriteGuard<'a, T>;
+pub struct ProtectedReadGuard<'a, T>(RwLockReadGuard<'a, ProtectedBox<T>>);
+pub struct ProtectedWriteGuard<'a, T>(RwLockWriteGuard<'a, ProtectedBox<T>>);
 
 /// A smart pointer that grants access to `T` for as long as the owner allows.
 ///
 /// The owner of `T` is allowed to create/remove users that have access to `T`.
 pub struct Protected<T, Access> {
-    inner: Arc<ProtectedBox<T>>,
+    inner: Arc<RwLock<ProtectedBox<T>>>,
     access_key: Option<u32>,
     _marker: PhantomData<Access>,
 }
 
-struct ProtectedBox<T> {
-    value: RwLock<T>,
-    access_keys: RwLock<HashSet<u32>>,
+pub struct ProtectedBox<T> {
+    value: T,
+    access_keys: HashSet<u32>,
 }
 
 impl<T> Protected<T, Owner> {
@@ -34,10 +35,10 @@ impl<T> Protected<T, Owner> {
     ///
     /// The instance returned by this function is considered the _owner_ of `T`.
     pub fn new(value: T) -> Protected<T, Owner> {
-        let inner = Arc::new(ProtectedBox {
-            value: RwLock::new(value),
-            access_keys: RwLock::new(HashSet::new()),
-        });
+        let inner = Arc::new(RwLock::new(ProtectedBox {
+            value,
+            access_keys: HashSet::new(),
+        }));
 
         Protected {
             inner,
@@ -51,9 +52,9 @@ impl<T> Protected<T, Owner> {
     /// This function returns a new `Protected` access to `T`, only if
     /// a user with the given ID does not already exist.
     pub fn create_user(&self, id: u32) -> Option<Protected<T, User>> {
-        let mut access_keys = self.inner.access_keys.write().unwrap();
-        if !access_keys.contains(&id) {
-            access_keys.insert(id);
+        let mut inner = self.inner.write().unwrap();
+        let access_keys = &mut inner.access_keys;
+        if access_keys.insert(id) {
             Some(Protected {
                 inner: self.inner.clone(),
                 access_key: Some(id),
@@ -66,7 +67,8 @@ impl<T> Protected<T, Owner> {
 
     /// Revokes access to `T` for a user with a given ID.
     pub fn remove_user(&self, id: u32) {
-        let mut access_keys = self.inner.access_keys.write().unwrap();
+        let mut inner = self.inner.write().unwrap();
+        let access_keys = &mut inner.access_keys;
         access_keys.remove(&id);
     }
 
@@ -77,7 +79,7 @@ impl<T> Protected<T, Owner> {
     /// Under the hood, `read` uses a [`std::sync::RwLock`], and this function panics
     /// if the `RwLock` ever becomes poisoned.
     pub fn read(&self) -> ProtectedReadGuard<T> {
-        self.inner.value.read().unwrap()
+        ProtectedReadGuard(self.inner.read().unwrap())
     }
 
     /// Locks this `T` so that the owner has exclusive write access to `T`.
@@ -87,7 +89,7 @@ impl<T> Protected<T, Owner> {
     /// Under the hood, `write` uses a [`std::sync::RwLock`], and this function panics
     /// if the `RwLock` ever becomes poisoned.
     pub fn write(&self) -> ProtectedWriteGuard<T> {
-        self.inner.value.write().unwrap()
+        ProtectedWriteGuard(self.inner.write().unwrap())
     }
 }
 
@@ -105,7 +107,7 @@ impl<T> Protected<T, User> {
     /// if the `RwLock` ever becomes poisoned.
     pub fn read(&self) -> Result<ProtectedReadGuard<T>, AccessDeniedError> {
         if self.has_access() {
-            Ok(self.inner.value.read().unwrap())
+            Ok(ProtectedReadGuard(self.inner.read().unwrap()))
         } else {
             Err(AccessDeniedError)
         }
@@ -124,7 +126,7 @@ impl<T> Protected<T, User> {
     /// if the `RwLock` ever becomes poisoned.
     pub fn write(&self) -> Result<ProtectedWriteGuard<T>, AccessDeniedError> {
         if self.has_access() {
-            Ok(self.inner.value.write().unwrap())
+            Ok(ProtectedWriteGuard(self.inner.write().unwrap()))
         } else {
             Err(AccessDeniedError)
         }
@@ -135,14 +137,16 @@ impl<T> Protected<T, User> {
     /// A user only has access to `T` if its access key is found in
     /// the access keys for the `Protected<T>`.
     fn has_access(&self) -> bool {
-        let access_keys = self.inner.access_keys.read().unwrap();
+        let inner = self.inner.read().unwrap();
+        let access_keys = &inner.access_keys;
         access_keys.contains(&self.access_key.unwrap())
     }
 }
 
 impl<T, A> Drop for Protected<T, A> {
     fn drop(&mut self) {
-        let mut access_keys = self.inner.access_keys.write().unwrap();
+        let mut inner = self.inner.write().unwrap();
+        let access_keys = &mut inner.access_keys;
         if let Some(access_key) = self.access_key {
             // If this is a user of `T`, the user should resign to its own access
             // to T.
@@ -152,6 +156,26 @@ impl<T, A> Drop for Protected<T, A> {
             // all accesses to `T` should be revoked when the owner is dropped.
             access_keys.clear();
         }
+    }
+}
+
+impl<'a, T> Deref for ProtectedReadGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.value
+    }
+}
+
+impl<'a, T> Deref for ProtectedWriteGuard<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.value
+    }
+}
+
+impl<'a, T> DerefMut for ProtectedWriteGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0.value
     }
 }
 
@@ -238,5 +262,18 @@ mod tests {
         let user = owner.create_user(0).unwrap();
         drop(owner);
         assert!(user.write().is_err())
+    }
+
+    #[test]
+    fn user_can_read_something_written_by_another_user() {
+        let owner = Protected::new(42);
+        let user1 = owner.create_user(0).unwrap();
+        let user2 = owner.create_user(1).unwrap();
+        {
+            let mut x = user1.write().unwrap();
+            *x = 43;
+        }
+        let x = user2.read().unwrap();
+        assert_eq!(*x, 43);
     }
 }
