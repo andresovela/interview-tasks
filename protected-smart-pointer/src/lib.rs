@@ -6,14 +6,22 @@ use std::sync::RwLock;
 use std::sync::RwLockReadGuard;
 use std::sync::RwLockWriteGuard;
 
+/// Zero-sized type used to mark instances of `Protected<T>` that
+/// "own" the `T` in the sense that they manage access to it.
 pub struct Owner;
+
+/// Zero-sized type used to mark instances of `Protected<T>` that
+/// may have access to `T` as long as the owner allows it.
 pub struct User;
 
 /// Indicates that the user no longer has access to `T`.
 #[derive(Debug)]
 pub struct AccessDeniedError;
 
+/// RAII structure used to release the shared read access of a lock when dropped.
 pub struct ProtectedReadGuard<'a, T>(RwLockReadGuard<'a, ProtectedBox<T>>);
+
+/// RAII structure used to release the exclusive write access of a lock when dropped.
 pub struct ProtectedWriteGuard<'a, T>(RwLockWriteGuard<'a, ProtectedBox<T>>);
 
 /// A smart pointer that grants access to `T` for as long as the owner allows.
@@ -25,7 +33,8 @@ pub struct Protected<T, Access> {
     _marker: PhantomData<Access>,
 }
 
-pub struct ProtectedBox<T> {
+/// Inner type of `Protected<T>`.
+struct ProtectedBox<T> {
     value: T,
     access_keys: HashSet<u32>,
 }
@@ -221,7 +230,7 @@ mod tests {
         let user2 = owner.create_user(0);
         assert!(user2.is_some());
     }
-
+ 
     #[test]
     fn user_with_access_can_read() {
         let owner = Protected::new(42);
