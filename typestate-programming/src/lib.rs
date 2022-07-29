@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 /// # Example
 ///
 /// ```
-/// use can_interface::{Can, Close};
+/// use can_interface::Can;
 ///
 /// let can = Can::new();
 /// let mut can = can.open();
@@ -28,11 +28,6 @@ pub struct Receiving;
 
 /// Closed interface.
 pub struct Closed;
-
-pub trait Close<T> {
-    /// Close an open interface.
-    fn close(self) -> T;
-}
 
 impl Can<Closed> {
     /// Create a CAN interface.
@@ -69,6 +64,13 @@ impl Can<Open> {
             _marker: PhantomData,
         }
     }
+
+    /// Close an open interface.
+    pub fn close(self) -> Can<Closed> {
+        Can {
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl Can<Receiving> {
@@ -76,20 +78,9 @@ impl Can<Receiving> {
     pub fn blocking_receive(&mut self) -> Result<u32, &str> {
         Ok(100)
     }
-}
 
-impl Close<Can<Closed>> for Can<Open> {
     /// Close an open interface.
-    fn close(self) -> Can<Closed> {
-        Can {
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl Close<Can<Closed>> for Can<Receiving> {
-    /// Close an open interface.
-    fn close(self) -> Can<Closed> {
+    pub fn close(self) -> Can<Closed> {
         Can {
             _marker: PhantomData,
         }
