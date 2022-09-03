@@ -114,7 +114,7 @@ impl<T> Protected<T, User> {
     ///
     /// Under the hood, `read` uses a [`std::sync::RwLock`], and this function panics
     /// if the `RwLock` ever becomes poisoned.
-    pub fn read(&self) -> Result<ProtectedReadGuard<T>, AccessDeniedError> {
+    pub fn try_read(&self) -> Result<ProtectedReadGuard<T>, AccessDeniedError> {
         if self.has_access() {
             Ok(ProtectedReadGuard(self.inner.read().unwrap()))
         } else {
@@ -133,7 +133,7 @@ impl<T> Protected<T, User> {
     ///
     /// Under the hood, `write` uses a [`std::sync::RwLock`], and this function panics
     /// if the `RwLock` ever becomes poisoned.
-    pub fn write(&self) -> Result<ProtectedWriteGuard<T>, AccessDeniedError> {
+    pub fn try_write(&self) -> Result<ProtectedWriteGuard<T>, AccessDeniedError> {
         if self.has_access() {
             Ok(ProtectedWriteGuard(self.inner.write().unwrap()))
         } else {
@@ -235,7 +235,7 @@ mod tests {
     fn user_with_access_can_read() {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
-        let x = user.read().unwrap();
+        let x = user.try_read().unwrap();
         assert_eq!(*x, 42);
     }
 
@@ -244,7 +244,7 @@ mod tests {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
         owner.remove_user(0);
-        assert!(user.read().is_err())
+        assert!(user.try_read().is_err())
     }
 
     #[test]
@@ -252,7 +252,7 @@ mod tests {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
         drop(owner);
-        assert!(user.read().is_err())
+        assert!(user.try_read().is_err())
     }
 
     #[test]
@@ -260,10 +260,10 @@ mod tests {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
         {
-            let mut x = user.write().unwrap();
+            let mut x = user.try_write().unwrap();
             *x = 43;
         }
-        let x = user.read().unwrap();
+        let x = user.try_read().unwrap();
         assert_eq!(*x, 43);
     }
 
@@ -272,7 +272,7 @@ mod tests {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
         owner.remove_user(0);
-        assert!(user.write().is_err())
+        assert!(user.try_write().is_err())
     }
 
     #[test]
@@ -280,7 +280,7 @@ mod tests {
         let owner = Protected::new(42);
         let user = owner.create_user(0).unwrap();
         drop(owner);
-        assert!(user.write().is_err())
+        assert!(user.try_write().is_err())
     }
 
     #[test]
@@ -289,10 +289,10 @@ mod tests {
         let user1 = owner.create_user(0).unwrap();
         let user2 = owner.create_user(1).unwrap();
         {
-            let mut x = user1.write().unwrap();
+            let mut x = user1.try_write().unwrap();
             *x = 43;
         }
-        let x = user2.read().unwrap();
+        let x = user2.try_read().unwrap();
         assert_eq!(*x, 43);
     }
 }
